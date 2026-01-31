@@ -44,4 +44,27 @@ class AuthService {
   Future<void> signOut() async {
     await _auth.signOut();
   }
+
+  // 1. Obtener datos del usuario en tiempo real
+  Stream<DocumentSnapshot> getUserStream() {
+    final user = _auth.currentUser;
+    return _db.collection('users').doc(user!.uid).snapshots();
+  }
+
+  // 2. Actualizar Perfil (Historia de Usuario: Carnet y Teléfono)
+  Future<String?> updateProfile({
+    required String carnet,
+    required String phone,
+  }) async {
+    try {
+      final user = _auth.currentUser;
+      await _db.collection('users').doc(user!.uid).update({
+        'carnet': carnet,
+        'phone': phone,
+      });
+      return null; // Éxito
+    } catch (e) {
+      return "Error al actualizar: $e";
+    }
+  }
 }

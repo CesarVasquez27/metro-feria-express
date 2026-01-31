@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+// Imports absolutos para evitar errores de rutas
 import 'package:metro_feria/services/auth_service.dart';
+import 'package:metro_feria/features/home/home_screen.dart'; 
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -9,17 +11,23 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  // Controladores para leer lo que escribe el usuario
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final AuthService _authService = AuthService(); // Instancia de nuestro servicio
-  bool _isLogin = true; // Para alternar entre "Login" y "Registro"
-  bool _isLoading = false;
+  
+  // Instancia de nuestro servicio de autenticación
+  final AuthService _authService = AuthService(); 
+  
+  // Variables de estado
+  bool _isLogin = true; // true = Login, false = Registro
+  bool _isLoading = false; // Para mostrar el círculo de carga
 
+  // Función principal que se ejecuta al dar click al botón naranja
   void _submit() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
-    // 1. Validación de campos vacíos
+    // 1. Validación: Campos vacíos
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor llena todos los campos')),
@@ -27,41 +35,55 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    // 2. CRITERIO DE ACEPTACIÓN: Validar correo UNIMET
+    // 2. Validación: Dominio Unimet
     if (!email.endsWith('@unimet.edu.ve')) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('🛑 Solo se permiten correos @unimet.edu.ve'),
+          content: Text('Solo se permiten correos @unimet.edu.ve'),
           backgroundColor: Colors.red,
         ),
       );
       return;
     }
 
+    // Inicio de carga (bloqueamos el botón)
     setState(() => _isLoading = true);
 
     String? error;
     if (_isLogin) {
-      // Iniciar Sesión
+      // INTENTAR INICIAR SESIÓN
       error = await _authService.loginUser(email, password);
     } else {
-      // Registrarse
+      // INTENTAR REGISTRARSE
       error = await _authService.registerUser(email, password);
     }
 
+    // Fin de carga
     setState(() => _isLoading = false);
 
-    if (error != null) {
-      // Hubo error (ej. contraseña corta)
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error), backgroundColor: Colors.red),
-      );
-    } else {
-      // ÉXITO: Aquí navegaremos al Home (próximo paso)
+    // Verificamos si la pantalla sigue abierta antes de usar el contexto
+    if (!mounted) return;
+
+    if (error == null) {
+      // --- CASO DE ÉXITO ---
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(_isLogin ? '¡Bienvenido!' : '¡Cuenta creada con éxito!'),
           backgroundColor: Colors.green,
+        ),
+      );
+      
+      // AQUÍ ESTÁ LA MAGIA: Navegamos al Home y cerramos el Login
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+      
+    } else {
+      // --- CASO DE ERROR ---
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error),
+          backgroundColor: Colors.red,
         ),
       );
     }
@@ -70,62 +92,84 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Icon(Icons.storefront, size: 80, color: Colors.orange),
-            const SizedBox(height: 16),
-            const Text(
-              "MetroFeria Express",
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 40),
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(
-                labelText: "Correo Unimet",
-                prefixIcon: Icon(Icons.email),
-                border: OutlineInputBorder(),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Logo e Icono
+              const Icon(Icons.storefront, size: 80, color: Colors.orange),
+              const SizedBox(height: 20),
+              const Text(
+                "MetroFeria Express",
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: "Contraseña",
-                prefixIcon: Icon(Icons.lock),
-                border: OutlineInputBorder(),
+              const SizedBox(height: 40),
+
+              // Campo de Correo
+              TextField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  labelText: "Correo Unimet",
+                  prefixIcon: Icon(Icons.email),
+                  border: OutlineInputBorder(),
+                  hintText: "usuario@unimet.edu.ve",
+                ),
+                keyboardType: TextInputType.emailAddress,
               ),
-            ),
-            const SizedBox(height: 24),
-            _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : ElevatedButton(
-                    onPressed: _submit,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: Text(
-                      _isLogin ? "INGRESAR" : "REGISTRARSE",
-                      style: const TextStyle(color: Colors.white, fontSize: 16),
+              const SizedBox(height: 16),
+
+              // Campo de Contraseña
+              TextField(
+                controller: _passwordController,
+                decoration: const InputDecoration(
+                  labelText: "Contraseña",
+                  prefixIcon: Icon(Icons.lock),
+                  border: OutlineInputBorder(),
+                ),
+                obscureText: true,
+              ),
+              const SizedBox(height: 30),
+
+              // Botón Principal (Login / Registro)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _submit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-            const SizedBox(height: 16),
-            TextButton(
-              onPressed: () => setState(() => _isLogin = !_isLogin),
-              child: Text(
-                _isLogin
-                    ? "¿No tienes cuenta? Regístrate aquí"
-                    : "¿Ya tienes cuenta? Inicia sesión",
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : Text(
+                          _isLogin ? "INGRESAR" : "REGISTRARSE",
+                          style: const TextStyle(fontSize: 18, color: Colors.white),
+                        ),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 20),
+
+              // Texto para cambiar entre modos
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _isLogin = !_isLogin;
+                  });
+                },
+                child: Text(
+                  _isLogin
+                      ? "¿No tienes cuenta? Regístrate aquí"
+                      : "¿Ya tienes cuenta? Inicia sesión",
+                  style: const TextStyle(color: Colors.brown),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
