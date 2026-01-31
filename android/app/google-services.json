@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "514035903477",
+    "project_id": "metroferia-express-74e32",
+    "storage_bucket": "metroferia-express-74e32.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:514035903477:android:479a4554a87e2f98a68ebc",
+        "android_client_info": {
+          "package_name": "com.example.metro_feria"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBKNIAinuwFaCBgHaT9CxtQUaFLb8r_uTM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
