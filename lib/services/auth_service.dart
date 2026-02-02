@@ -13,14 +13,14 @@ class AuthService {
         email: email,
         password: password,
       );
-      
+
       User? user = result.user;
 
       // 2. Crear documento en Firestore (Base de datos)
       await _db.collection('users').doc(user!.uid).set({
         'email': email,
         'role': 'student', // Por defecto todos son estudiantes
-        'favorites': [],   // Lista vacía de favoritos
+        'favorites': [], // Lista vacía de favoritos
         'createdAt': DateTime.now(),
       });
 
@@ -65,6 +65,31 @@ class AuthService {
       return null; // Éxito
     } catch (e) {
       return "Error al actualizar: $e";
+    }
+  }
+
+  Future<void> toggleFavorite(String productId) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    final userRef = _db.collection('users').doc(user.uid);
+
+    // Primero leemos el documento actual para saber si el producto ya es favorito
+    final doc = await userRef.get();
+    if (doc.exists) {
+      List<dynamic> favorites = doc.data()?['favorites'] ?? [];
+
+      if (favorites.contains(productId)) {
+        // CRITERIO 3: Al desmarcar, se elimina de la lista
+        await userRef.update({
+          'favorites': FieldValue.arrayRemove([productId]),
+        });
+      } else {
+        // CRITERIO 2: Al hacer clic, se guarda en la lista
+        await userRef.update({
+          'favorites': FieldValue.arrayUnion([productId]),
+        });
+      }
     }
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-// Imports absolutos para evitar errores de rutas
 import 'package:metro_feria/services/auth_service.dart';
+// IMPORTANTE: Importamos el Home para poder navegar hacia él
+import 'package:metro_feria/features/home/home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,23 +11,23 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // Controladores para leer lo que escribe el usuario
+  // Estos controladores son como "variables" que guardan lo que escribes en las cajas de texto
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  // Instancia de nuestro servicio de autenticación
   final AuthService _authService = AuthService();
 
-  // Variables de estado
-  bool _isLogin = true; // true = Login, false = Registro
-  bool _isLoading = false; // Para mostrar el círculo de carga
+  // _isLogin: true si estamos logueando, false si nos estamos registrando
+  bool _isLogin = true;
+  // _isLoading: para mostrar el circulito girando mientras Firebase piensa
+  bool _isLoading = false;
 
-  // Función principal que se ejecuta al dar click al botón naranja
+  // Esta es la función principal que se activa al tocar el botón naranja
   void _submit() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
-    // 1. Validación: Campos vacíos
+    // 1. VALIDACIÓN BÁSICA: Que no estén vacíos
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor llena todos los campos')),
@@ -34,7 +35,7 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    // 2. Validación: Dominio Unimet
+    // 2. REGLA DE NEGOCIO: Solo correos Unimet
     if (!email.endsWith('@unimet.edu.ve')) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -45,9 +46,10 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    // Inicio de carga
+    // Activamos el circulito de carga
     setState(() => _isLoading = true);
 
+    // Llamamos al servicio de Firebase (Login o Registro)
     String? error;
     if (_isLogin) {
       error = await _authService.loginUser(email, password);
@@ -55,26 +57,21 @@ class _LoginScreenState extends State<LoginScreen> {
       error = await _authService.registerUser(email, password);
     }
 
-    // Fin de carga
+    // Desactivamos el circulito de carga
     setState(() => _isLoading = false);
 
-    if (!mounted) return;
+    if (!mounted) return; // Seguridad de Flutter
 
-    // --- MANEJO DEL RESULTADO ---
     if (error != null) {
-      // Hubo un error, lo mostramos
+      // SI HUBO ERROR: Lo mostramos en rojo
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(error), backgroundColor: Colors.red),
       );
     } else {
-      // Éxito: Aquí podrías navegar al Home
-      print("Login exitoso");
-      // Opcional: Mostrar mensaje verde temporalmente
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('¡Ingreso Exitoso!'),
-          backgroundColor: Colors.green,
-        ),
+      // SI FUE EXITOSO: Navegamos al Home
+      // pushReplacement significa que borramos el Login del historial (para que no puedan volver atrás)
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
     }
   }
@@ -82,13 +79,14 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Center y SingleChildScrollView sirven para que se vea bien en cualquier tamaño de pantalla
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Logo e Icono
+              // ICONO Y TÍTULO
               const Icon(Icons.storefront, size: 80, color: Colors.orange),
               const SizedBox(height: 20),
               const Text(
@@ -97,20 +95,19 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 40),
 
-              // Campo de Correo
+              // CAMPO EMAIL
               TextField(
                 controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(
                   labelText: "Correo Unimet",
                   prefixIcon: Icon(Icons.email),
                   border: OutlineInputBorder(),
-                  hintText: "usuario@unimet.edu.ve",
                 ),
-                keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 16),
 
-              // Campo de Contraseña
+              // CAMPO CONTRASEÑA
               TextField(
                 controller: _passwordController,
                 decoration: const InputDecoration(
@@ -118,11 +115,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   prefixIcon: Icon(Icons.lock),
                   border: OutlineInputBorder(),
                 ),
-                obscureText: true,
+                obscureText: true, // Oculta la contraseña con puntitos
               ),
               const SizedBox(height: 30),
 
-              // Botón Principal (Login / Registro)
+              // BOTÓN PRINCIPAL (INGRESAR / REGISTRARSE)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -147,7 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Texto para cambiar entre modos
+              // TEXTO PARA CAMBIAR ENTRE LOGIN Y REGISTRO
               TextButton(
                 onPressed: () {
                   setState(() {

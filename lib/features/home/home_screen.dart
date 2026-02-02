@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-// Imports absolutos (sin puntos)
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:metro_feria/features/auth/login_screen.dart';
 import 'package:metro_feria/features/profile/profile_screen.dart';
+// Importamos la pantalla de favoritos y el modelo
+import 'package:metro_feria/features/favorites/favorites_screen.dart';
+import 'package:metro_feria/models/product_model.dart';
+import 'package:metro_feria/services/auth_service.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  // Función para cerrar sesión
   void _logout(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
-    
-    // Verificamos si el widget sigue montado antes de navegar
     if (context.mounted) {
-      // Volver al Login y borrar el historial para que no puedan volver atrás
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
@@ -22,8 +22,8 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Obtenemos el usuario actual para mostrar su correo
     final user = FirebaseAuth.instance.currentUser;
+    final authService = AuthService();
 
     return Scaffold(
       appBar: AppBar(
@@ -31,10 +31,19 @@ class HomeScreen extends StatelessWidget {
         backgroundColor: Colors.orange,
         foregroundColor: Colors.white,
         actions: [
-          // BOTÓN 1: Ir al Perfil (Historia de Usuario 1.3)
+          IconButton(
+            icon: const Icon(Icons.favorite),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const FavoritesScreen(),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.person),
-            tooltip: 'Mi Perfil',
             onPressed: () {
               Navigator.push(
                 context,
@@ -42,37 +51,98 @@ class HomeScreen extends StatelessWidget {
               );
             },
           ),
-          
-          // BOTÓN 2: Cerrar Sesión
           IconButton(
             icon: const Icon(Icons.logout),
-            tooltip: 'Cerrar Sesión',
             onPressed: () => _logout(context),
-          )
+          ),
         ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.storefront, size: 100, color: Colors.orangeAccent),
-            const SizedBox(height: 20),
-            Text(
-              "¡Hola, ${user?.email}!", 
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              "Bienvenido al mercado digital de la Unimet.",
-              style: TextStyle(color: Colors.grey),
-            ),
-            const SizedBox(height: 30),
-            const Text(
-              "(Aquí pronto verás los restaurantes 🍔)",
-              style: TextStyle(fontStyle: FontStyle.italic),
-            ),
-          ],
-        ),
+      // StreamBuilder escucha los cambios en Favoritos en tiempo real
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: authService.getUserStream(),
+        builder: (context, snapshot) {
+          // Si está cargando o no hay datos, inicializamos favoritos como lista vacía
+          List<dynamic> myFavorites = [];
+          if (snapshot.hasData && snapshot.data!.data() != null) {
+            var userData = snapshot.data!.data() as Map<String, dynamic>;
+            myFavorites = userData['favorites'] ?? [];
+          }
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  "Hola, ${user?.email?.split('@')[0]} 👋\n¿Qué te provoca hoy?",
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Expanded(
+                // Aquí construimos la lista del menú usando los datos de 'dummyMenu'
+                child: ListView.builder(
+                  itemCount: dummyMenu.length,
+                  itemBuilder: (context, index) {
+                    final product = dummyMenu[index];
+                    final isFav = myFavorites.contains(product.id);
+
+                    return Card(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      elevation: 3,
+                      child: ListTile(
+                        leading: Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: Colors.orange.shade100,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.fastfood,
+                            color: Colors.orange,
+                          ),
+                        ),
+                        title: Text(
+                          product.name,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(product.restaurant),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              "\$${product.price}",
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green,
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(
+                                isFav ? Icons.favorite : Icons.favorite_border,
+                                color: isFav ? Colors.red : Colors.grey,
+                              ),
+                              onPressed: () {
+                                authService.toggleFavorite(product.id);
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
