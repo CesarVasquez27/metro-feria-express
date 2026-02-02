@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 // Imports absolutos para evitar errores de rutas
 import 'package:metro_feria/services/auth_service.dart';
-import 'package:metro_feria/features/home/home_screen.dart'; 
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,10 +13,10 @@ class _LoginScreenState extends State<LoginScreen> {
   // Controladores para leer lo que escribe el usuario
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  
+
   // Instancia de nuestro servicio de autenticación
-  final AuthService _authService = AuthService(); 
-  
+  final AuthService _authService = AuthService();
+
   // Variables de estado
   bool _isLogin = true; // true = Login, false = Registro
   bool _isLoading = false; // Para mostrar el círculo de carga
@@ -46,44 +45,35 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    // Inicio de carga (bloqueamos el botón)
+    // Inicio de carga
     setState(() => _isLoading = true);
 
     String? error;
     if (_isLogin) {
-      // INTENTAR INICIAR SESIÓN
       error = await _authService.loginUser(email, password);
     } else {
-      // INTENTAR REGISTRARSE
       error = await _authService.registerUser(email, password);
     }
 
     // Fin de carga
     setState(() => _isLoading = false);
 
-    // Verificamos si la pantalla sigue abierta antes de usar el contexto
     if (!mounted) return;
 
-    if (error == null) {
-      // --- CASO DE ÉXITO ---
+    // --- MANEJO DEL RESULTADO ---
+    if (error != null) {
+      // Hubo un error, lo mostramos
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_isLogin ? '¡Bienvenido!' : '¡Cuenta creada con éxito!'),
-          backgroundColor: Colors.green,
-        ),
+        SnackBar(content: Text(error), backgroundColor: Colors.red),
       );
-      
-      // AQUÍ ESTÁ LA MAGIA: Navegamos al Home y cerramos el Login
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
-      
     } else {
-      // --- CASO DE ERROR ---
+      // Éxito: Aquí podrías navegar al Home
+      print("Login exitoso");
+      // Opcional: Mostrar mensaje verde temporalmente
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error),
-          backgroundColor: Colors.red,
+        const SnackBar(
+          content: Text('¡Ingreso Exitoso!'),
+          backgroundColor: Colors.green,
         ),
       );
     }
@@ -148,7 +138,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       ? const CircularProgressIndicator(color: Colors.white)
                       : Text(
                           _isLogin ? "INGRESAR" : "REGISTRARSE",
-                          style: const TextStyle(fontSize: 18, color: Colors.white),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            color: Colors.white,
+                          ),
                         ),
                 ),
               ),
