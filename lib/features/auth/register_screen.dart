@@ -2,21 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:metro_feria/services/auth_service.dart';
 import 'package:metro_feria/features/home/home_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
   bool _isLoading = false;
 
-  void _login() async {
-    // Nombre de función más claro
+  void _register() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
@@ -27,10 +26,31 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
+    // Validación de dominio UNIMET para el registro
+    if (!email.endsWith('@unimet.edu.ve')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Solo se permiten correos @unimet.edu.ve'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (password.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('La contraseña debe tener al menos 6 caracteres'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
-    // Solo llamamos a loginUser
-    String? error = await _authService.loginUser(email, password);
+    // Solo llamamos a registerUser
+    String? error = await _authService.registerUser(email, password);
 
     setState(() => _isLoading = false);
 
@@ -41,7 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
         SnackBar(content: Text(error), backgroundColor: Colors.red),
       );
     } else {
-      // Navegamos al Home y borramos TODA la ruta anterior (incluida la pantalla de Bienvenida)
+      // Navegamos al Home y borramos todo el historial anterior
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const HomeScreen()),
         (Route<dynamic> route) => false,
@@ -52,7 +72,6 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Botón para volver atrás
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -67,10 +86,10 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.login, size: 80, color: Colors.orange),
+              const Icon(Icons.person_add, size: 80, color: Colors.orange),
               const SizedBox(height: 20),
               const Text(
-                "Iniciar Sesión",
+                "Crear Cuenta",
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 40),
@@ -82,6 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   labelText: "Correo Unimet",
                   prefixIcon: Icon(Icons.email),
                   border: OutlineInputBorder(),
+                  hintText: "ejemplo@unimet.edu.ve",
                 ),
               ),
               const SizedBox(height: 16),
@@ -100,7 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _isLoading ? null : _login, // Llama a _login
+                  onPressed: _isLoading ? null : _register, // Llama a _register
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.orange,
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -111,7 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : const Text(
-                          "INGRESAR",
+                          "REGISTRARSE",
                           style: TextStyle(fontSize: 18, color: Colors.white),
                         ),
                 ),
