@@ -37,4 +37,5 @@ final List<Product> dummyMenu = [
     price: 4.0,
   ),
   Product(id: 'p4', name: 'Ensalada César', restaurant: 'Subway', price: 6.0),
+
 ];

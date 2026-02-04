@@ -150,27 +150,50 @@ class _CartScreenState extends State<CartScreen> {
                           ),
                         ],
                       ),
+
                       const SizedBox(height: 15),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _processOrder,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
-                            padding: const EdgeInsets.symmetric(vertical: 15),
-                          ),
-                          child: _isLoading
-                              ? const CircularProgressIndicator(
-                                  color: Colors.white,
-                                )
-                              : const Text(
-                                  "CONFIRMAR PEDIDO",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                  ),
+
+                      Row(
+                        children: [
+                          // BOTÓN BORRAR
+                          const SizedBox(width: 10),
+
+                          // BOTÓN CONFIRMAR / AGREGAR PEDIDO
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: _isLoading ? null : _processOrder,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.orange,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 15,
                                 ),
-                        ),
+                              ),
+                              child: _isLoading
+                                  ? const CircularProgressIndicator(
+                                      color: Colors.white,
+                                    )
+                                  : const Text(
+                                      "CONFIRMAR PEDIDO",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.delete_forever,
+                              color: Colors.orange,
+                              size: 32,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _cartService.clear();
+                              });
+                            },
+                          ),
+                        ],
                       ),
                     ],
                   ),

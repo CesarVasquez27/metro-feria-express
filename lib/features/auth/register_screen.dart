@@ -27,10 +27,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     // Validación de dominio UNIMET para el registro
-    if (!email.endsWith('@unimet.edu.ve')) {
+    if (!email.endsWith('@unimet.edu.ve') && !email.endsWith('@correo.unimet.edu.ve')) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Solo se permiten correos @unimet.edu.ve'),
+          content: Text('Solo se permiten correos @unimet.edu.ve o @correo.unimet.edu.ve'),
           backgroundColor: Colors.red,
         ),
       );

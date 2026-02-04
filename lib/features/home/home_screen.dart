@@ -139,96 +139,127 @@ class HomeScreen extends StatelessWidget {
 
               // LISTA DE PLATOS (DUMMY DATA)
               Expanded(
-                child: ListView.builder(
+                child: GridView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3, //Nro de columnas
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 1.25, // controla la altura de la card
+                  ),
                   itemCount: dummyMenu.length,
                   itemBuilder: (context, index) {
                     final product = dummyMenu[index];
                     final isFav = myFavorites.contains(product.id);
 
                     return Card(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
                       elevation: 3,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.all(10),
-                        // IMAGEN DEL PLATO (Icono por ahora)
-                        leading: Container(
-                          width: 60,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            color: Colors.orange.shade100,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(
-                            Icons.fastfood,
-                            color: Colors.orange,
-                            size: 30,
-                          ),
-                        ),
-
-                        // DATOS DEL PLATO
-                        title: Text(
-                          product.name,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(product.restaurant),
-
-                        // PRECIO Y ACCIONES
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
+                      child: Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              "\$${product.price}",
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-
-                            // ACCIÓN 1: FAVORITO
-                            IconButton(
-                              icon: Icon(
-                                isFav ? Icons.favorite : Icons.favorite_border,
-                                color: isFav ? Colors.red : Colors.grey,
-                              ),
-                              onPressed: () {
-                                authService.toggleFavorite(product.id);
-                              },
-                            ),
-
-                            // ACCIÓN 2: AGREGAR AL CARRITO
+                            // IMAGEN / ICONO
                             Container(
+                              height: 100,
+                              width: double.infinity,
                               decoration: BoxDecoration(
+                                color: Colors.orange.shade100,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(
+                                Icons.fastfood,
                                 color: Colors.orange,
-                                borderRadius: BorderRadius.circular(8),
+                                size: 40,
                               ),
-                              child: IconButton(
-                                icon: const Icon(
-                                  Icons.add,
-                                  color: Colors.white,
+                            ),
+
+                            const SizedBox(height: 8),
+
+                            // NOMBRE
+                            Text(
+                              product.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+
+                            Text(
+                              product.restaurant,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey,
+                              ),
+                            ),
+
+                            const Spacer(),
+
+                            // PRECIO + ACCIONES
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "\$${product.price}",
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green,
+                                  ),
                                 ),
-                                constraints:
-                                    const BoxConstraints(), // Hace el botón más compacto
-                                onPressed: () {
-                                  cartService.addToCart(product);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        "${product.name} agregado al carrito 🛒",
+
+                                Row(
+                                  children: [
+                                    IconButton(
+                                      icon: Icon(
+                                        isFav
+                                            ? Icons.favorite
+                                            : Icons.favorite_border,
+                                        color: isFav ? Colors.red : Colors.grey,
                                       ),
-                                      duration: const Duration(seconds: 1),
-                                      behavior: SnackBarBehavior.floating,
+                                      onPressed: () {
+                                        authService.toggleFavorite(product.id);
+                                      },
                                     ),
-                                  );
-                                },
-                              ),
+
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.orange,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: IconButton(
+                                        icon: const Icon(
+                                          Icons.add,
+                                          color: Colors.white,
+                                        ),
+                                        constraints: const BoxConstraints(),
+                                        onPressed: () {
+                                          cartService.addToCart(product);
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                "${product.name} agregado al carrito 🛒",
+                                              ),
+                                              duration: const Duration(
+                                                seconds: 1,
+                                              ),
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
                           ],
                         ),
